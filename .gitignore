@@ -92,3 +92,5 @@ ENV/
 *.txt
 *.csv
 .idea/
+screenshots/
+videos/

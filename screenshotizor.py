@@ -1,3 +1,6 @@
+#!/usr/bin/env python2.7
+
+import argparse
 import csv
 import numpy as np
 import os
@@ -88,18 +91,13 @@ def write_compressed_info(video_id, screenshots_dst, writer, screenshots_url):
         })
 
 
-if __name__ == '__main__':
-    input_file = 'youtube.txt'
-    videos_dst = 'videos'
-    screenshots_dst = 'screenshots'
-    screenshots_url = 'https://storage.googleapis.com/studysmart-984.appspot.com/screenshots/'
-    # download_videos(input_file, videos_dst)
+def main(input_file, videos_dst, screenshots_dst, screenshots_url, output_file):
+    download_videos(input_file, videos_dst)
     video_ids = get_video_ids(videos_dst)
 
     subprocess.call(['rm', '-fr', screenshots_dst])
     subprocess.call(['mkdir', screenshots_dst])
 
-    output_file = 'output.csv'
     with open(output_file, 'w') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=['video_id', 'url', 'start', 'end'])
         writer.writeheader()
@@ -107,3 +105,15 @@ if __name__ == '__main__':
             make_screenshots(videos_dst, video_id, screenshots_dst)
             compress_screenshots(video_id, screenshots_dst)
             write_compressed_info(video_id, screenshots_dst, writer, screenshots_url)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Create screenshots from YouTube videos.')
+    parser.add_argument('input_file', help='Input file - list of YouTube links.')
+    parser.add_argument('screenshots_url', help='URL to prefix file names with.')
+    parser.add_argument('-v', '--videos_dst', help='Destination folder for downloaded videos.', default='videos')
+    parser.add_argument('-s', '--screenshots_dst', help='Destination folder for created screenshots.', default='screenshots')
+    parser.add_argument('-o', '--output_file', help='Output CSV file.', default='screenshots.csv')
+
+    args = parser.parse_args()
+    main(args.input_file, args.videos_dst, args.screenshots_dst, args.screenshots_url, args.output_file)
