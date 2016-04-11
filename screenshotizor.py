@@ -37,7 +37,7 @@ def download_videos(input_file, dst):
 
 
 def get_video_ids(dst):
-    return map(lambda x: x[:-4], os.listdir(dst))
+    return map(lambda x: (x[:-4], x[-3:]), os.listdir(dst))
 
 
 def make_screenshots(videos_dst, video_id, screenshots_dst, fmt='mkv'):
@@ -91,6 +91,14 @@ def write_compressed_info(video_id, screenshots_dst, writer, screenshots_url):
         })
 
 
+def upload_screenshots(screenshots_dst, screenshots_url):
+    screenshots_dst = remove_trailing_slash(screenshots_dst)
+    screenshots_url = remove_trailing_slash(screenshots_url)
+    gcloud_url = 'gs://' + screenshots_url.split('googleapis.com/')[1]
+    subprocess.call(['gsutil', '-m', 'cp', '-r', '{}/*'.format(screenshots_dst), gcloud_url])
+    subprocess.call(['gsutil', 'acl', '-r', 'ch', '-u', 'AllUsers:R', gcloud_url])
+
+
 def main(input_file, videos_dst, screenshots_dst, screenshots_url, output_file):
     download_videos(input_file, videos_dst)
     video_ids = get_video_ids(videos_dst)
@@ -101,10 +109,12 @@ def main(input_file, videos_dst, screenshots_dst, screenshots_url, output_file):
     with open(output_file, 'w') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=['video_id', 'url', 'start', 'end'])
         writer.writeheader()
-        for video_id in video_ids:
-            make_screenshots(videos_dst, video_id, screenshots_dst)
+        for video_id, fmt in video_ids:
+            make_screenshots(videos_dst, video_id, screenshots_dst, fmt=fmt)
             compress_screenshots(video_id, screenshots_dst)
             write_compressed_info(video_id, screenshots_dst, writer, screenshots_url)
+
+    upload_screenshots(screenshots_dst, screenshots_url)
 
 
 if __name__ == '__main__':
