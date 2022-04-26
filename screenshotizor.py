@@ -95,7 +95,7 @@ def upload_screenshots(screenshots_dst, screenshots_url):
     screenshots_dst = remove_trailing_slash(screenshots_dst)
     screenshots_url = remove_trailing_slash(screenshots_url)
     gcloud_url = 'gs://' + screenshots_url.split('googleapis.com/')[1]
-    subprocess.call(['gsutil', '-m', 'cp', '-r', '{}/*'.format(screenshots_dst), gcloud_url])
+    subprocess.call(['gsutil', '-m', 'cp', '-R', '{}/*'.format(screenshots_dst), gcloud_url])
 
     gcloud_urls = [gcloud_url + '/' + video_id for video_id in os.listdir(screenshots_dst)]
 
